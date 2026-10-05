@@ -6,13 +6,11 @@
   const L = 100, W = 64;
 
   // ---------- durum ----------
-  const socket = window.io ? io({ transports: ['websocket', 'polling'] }) : { on() {}, emit() {} };
-  const STATIC_MODE = !window.io;
+  const socket = io({ transports: ['websocket', 'polling'] });
   let phase = 'menu';            // menu | lobby | match | end
   let room = null, minutes = CFG.durations[1] || 5, muted = false, playing = false;
   const joined = [false, false], slotTeam = [null, null];
-  let mode = 'match', shoot = null;
-  let touchMode = false;   // mode: match | pen (penaltı atışları)
+  let mode = 'match', shoot = null, touchMode = false;   // match | pen | touch
   let game = FafiGame.createGame(CFG, onGameEvent);
   game.start(minutes, [false, false]);   // menü arkasında duran önizleme
 
@@ -91,7 +89,8 @@
   function pitchTexture() {
     const S = 10, c = document.createElement('canvas'); c.width = L * S; c.height = W * S;
     const g = c.getContext('2d');
-    for (let i = 0; i < 10; i++) { g.fillStyle = i % 2 ? '#2f6a3d' : '#2a6237'; g.fillRect(i * 10 * S, 0, 10 * S, W * S); }
+    for (let i = 0; i < 10; i++) { g.fillStyle = i % 2 ? '#2f713f' : '#285f36'; g.fillRect(i * 10 * S, 0, 10 * S, W * S); }
+    g.globalAlpha = 0.13; g.strokeStyle = '#d8e7cf'; g.lineWidth = 0.7; for (let x = 0; x < L * S; x += 2.4 * S) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 18 * S, W * S); g.stroke(); } g.globalAlpha = 1;
     g.strokeStyle = 'rgba(240,238,228,.9)'; g.lineWidth = 2.2; g.fillStyle = 'rgba(240,238,228,.9)';
     const X = (x) => (x + L / 2) * S, Z = (z) => (z + W / 2) * S;
     g.strokeRect(X(-L / 2) + 1, Z(-W / 2) + 1, L * S - 2, W * S - 2);
@@ -109,12 +108,10 @@
   }
   // Hazır saha dokusu (football_court.glb içinden). Çizgiler dokunun %92.6 x %94'ünü kaplar;
   // plane o oranda büyütülür ki çizgiler oyunun gerçek saha sınırına (L x W) otursun.
-  const pitchMat = new THREE.MeshLambertMaterial({ map: pitchTexture() });
-  const pitch = new THREE.Mesh(new THREE.PlaneGeometry(L / 0.926, W / 0.94), pitchMat);
+  // Yeni saha: eski pitch.png'ye bağlı değil; yüksek kontrastlı yayın sahası.
+  const pitchMat = new THREE.MeshLambertMaterial({ map: pitchTexture(), roughness: 0.95 });
+  const pitch = new THREE.Mesh(new THREE.PlaneGeometry(L, W), pitchMat);
   pitch.rotation.x = -Math.PI / 2; scene.add(pitch);
-  new THREE.TextureLoader().load('assets/pitch.png', (tex) => {
-    tex.anisotropy = 8; pitchMat.map = tex; pitchMat.color.set(0xffffff); pitchMat.needsUpdate = true;
-  }, undefined, () => console.warn('Saha dokusu yüklenemedi: assets/pitch.png'));
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 300), new THREE.MeshLambertMaterial({ color: '#1b3324' }));
   ground.rotation.x = -Math.PI / 2; ground.position.y = -0.05; scene.add(ground);
   const seatColors = ['#263644', '#344857', '#3f4d58', '#594743'].map((color) => new THREE.MeshLambertMaterial({ color }));
@@ -270,6 +267,9 @@
     const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, depthTest: false, depthWrite: false }));
     label.position.y = 3.05; label.scale.set(4.2 / PLAYER_SCALE * 0.85, 1.0 / PLAYER_SCALE * 0.85, 1); label.visible = true; g.add(label);
     g.userData.nameLabel = label;
+    const numCanvas = document.createElement('canvas'); numCanvas.width = 128; numCanvas.height = 128;
+    const nctx = numCanvas.getContext('2d'); nctx.textAlign='center'; nctx.textBaseline='middle'; nctx.font='900 72px Arial'; nctx.lineWidth=7; nctx.strokeStyle='rgba(0,0,0,.45)'; nctx.strokeText(String(player.number),64,67); nctx.fillStyle = team === 0 ? '#f5f1e7' : '#202124'; nctx.fillText(String(player.number),64,67);
+    const numSprite = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(numCanvas),transparent:true,depthTest:true})); numSprite.position.set(0,1.58,0.34); numSprite.scale.set(.48,.48,1); body.add(numSprite);
     const sh = new THREE.Mesh(shadowGeo, shadowMat); sh.rotation.x = -Math.PI / 2; sh.position.y = 0.04; g.add(sh);
     scene.add(g); return g;
   }
@@ -383,7 +383,7 @@
       else console.error('Animated human model failed to load', error);
     });
   };
-  loadPlayerModel();
+  // Yeni oyuncu görünümü: eski harici GLB karakterleri kullanılmaz.
   const rings = [0, 1].map(() => {
     const r = new THREE.Mesh(new THREE.RingGeometry(1.0, 1.2, 28), new THREE.MeshBasicMaterial({ color: '#ece8dc', transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
     r.rotation.x = -Math.PI / 2; r.position.y = 0.06; r.visible = false; scene.add(r); return r;
@@ -536,7 +536,7 @@
     const b = $('banner'); b.innerHTML = html; b.classList.toggle('goal', cls === 'goal'); b.classList.add('on');
     clearTimeout(bannerTimer); bannerTimer = setTimeout(() => b.classList.remove('on'), ms || 1600);
   }
-  function screen(id) { ['menu', 'lobby', 'end'].forEach((s) => $(s).classList.toggle('on', s === id)); if ($('touchPad')) $('touchPad').classList.toggle('on', touchMode && id === null && phase === 'match'); }
+  function screen(id) { ['menu', 'lobby', 'end'].forEach((s) => $(s).classList.toggle('on', s === id)); }
 
   // ---------- ağ ----------
   const send = (slot, msg) => socket.emit('h2c', { slot, msg });
@@ -594,22 +594,7 @@
   }
 
   // ---------- akış ----------
-
-  function startTouchMatch() {
-    loadAudio();
-    touchMode = true; mode = 'match'; phase = 'match'; playing = true; room = null;
-    slotTeam[0] = 0; slotTeam[1] = 1; joined[0] = joined[1] = true;
-    shoot = null; DOTS.classList.remove('on');
-    game.start(minutes, [true, true]);
-    lastClock = lastScore = ''; setTeamsHud();
-    $('tpTeam0').textContent = CFG.teams[0].short + ' · ' + CFG.teams[0].name;
-    $('tpTeam1').textContent = CFG.teams[1].short + ' · ' + CFG.teams[1].name;
-    screen(null); $('hud').classList.add('on'); $('sndHud').classList.add('on');
-    crowd(true); snd('whistle');
-  }
-
   function openLobby() {
-    if (STATIC_MODE) { startTouchMatch(); return; }
     loadAudio();
     socket.emit('host:create', (r) => {
       room = r.code; phase = 'lobby';
@@ -623,7 +608,7 @@
   }
   function startMatch() {
     if (phase !== 'lobby' && phase !== 'end') return;
-    phase = 'match'; playing = true; updateHumans();
+    phase = 'match'; playing = true; touchMode = false; updateHumans();
     shoot = null; DOTS.classList.remove('on');
     game.start(minutes, game.human);
     lastClock = lastScore = ''; setTeamsHud();
@@ -654,6 +639,7 @@
       banner('GOL!<small>' + CFG.teams[d.team].name + '</small>', 2400, 'goal'); snd('goal');
       both({ t: 'vib', ms: [220, 80, 220] });
     } else if (type === 'end') {
+      if (window.FafiTouch) window.FafiTouch.hide();
       phase = 'end'; playing = true; snd('whistle'); crowd(false);
       const [a, b] = d.score;
       $('endTitle').textContent = a === b ? 'Berabere' : CFG.teams[a > b ? 0 : 1].name + ' kazandı';
@@ -681,7 +667,7 @@
   }
   function startShootout() {
     if (phase !== 'lobby' && phase !== 'end') return;
-    phase = 'match'; playing = true; updateHumans();
+    phase = 'match'; playing = true; touchMode = false; updateHumans();
     game.start(minutes, [false, false]);
     shoot = { S: FafiGame.createShootout(), st: 'intro', t: 0, k: null, in: [null, null] };
     game.score = shoot.S.score; lastClock = lastScore = ''; setTeamsHud();
@@ -759,6 +745,14 @@
   }
 
   // ---------- düğmeler ----------
+  function startTouchMatch() {
+    if (phase !== 'menu' && phase !== 'end') return;
+    touchMode = true; mode = 'match'; phase = 'match'; playing = true; room = null; shoot = null;
+    game.start(minutes, [true, true]); lastClock = lastScore = ''; setTeamsHud(); screen(null); $('hud').classList.add('on'); $('sndHud').classList.add('on');
+    if (window.FafiTouch) window.FafiTouch.show({ game });
+    crowd(true); snd('whistle');
+  }
+
   // Tek dokunuşta aç: hem pointerup hem click dinlenir, çift tetiklenmeyi zaman koruması engeller.
   let lastOpen = 0;
   const bindMenu = (id, m) => {
@@ -766,38 +760,11 @@
     $(id).addEventListener('pointerup', go); $(id).addEventListener('click', go);
   };
   bindMenu('playBtn', 'match'); bindMenu('penModeBtn', 'pen');
-  $('touchModeBtn').addEventListener('click', () => { if (phase === 'menu') startTouchMatch(); });
+  $('touchModeBtn').addEventListener('pointerup', startTouchMatch); $('touchModeBtn').addEventListener('click', startTouchMatch);
   $('sndBtn').onclick = () => { loadAudio(); setMuted(!muted); };
   $('sndHud').onclick = () => setMuted(!muted);
-  $('lobbyBack').onclick = $('toMenu').onclick = () => location.reload();
-  $('rematch').onclick = () => { if (touchMode) { startTouchMatch(); } else { screen(null); beginMode(); } };
-
-  // ---------- dokunmatik iki oyunculu gamepad ----------
-  const touchPointers = [null, null];
-  const touchButtons = new Map();
-  function touchMove(team, x, z) { game.setMove(team, clamp(x, -1, 1), clamp(z, -1, 1)); }
-  function resetStick(team) { const side = document.querySelector('.tp-stick[data-team="' + team + '"]'); if (!side) return; side.querySelector('.tp-knob').style.transform = 'translate(-50%,-50%)'; touchMove(team, 0, 0); touchPointers[team] = null; }
-  document.querySelectorAll('.tp-stick').forEach((stick) => {
-    const team = Number(stick.dataset.team);
-    stick.addEventListener('pointerdown', (e) => {
-      if (!touchMode || phase !== 'match') return; e.preventDefault(); stick.setPointerCapture(e.pointerId); touchPointers[team] = e.pointerId;
-      const move = (ev) => {
-        if (touchPointers[team] !== ev.pointerId) return; const r = stick.getBoundingClientRect(); const max = r.width * .38;
-        let dx = ev.clientX - (r.left + r.width/2), dy = ev.clientY - (r.top + r.height/2); const d = Math.hypot(dx,dy); if (d > max) { dx *= max/d; dy *= max/d; }
-        stick.querySelector('.tp-knob').style.transform = 'translate(calc(-50% + ' + dx + 'px),calc(-50% + ' + dy + 'px))'; touchMove(team, dx/max, dy/max);
-      };
-      stick.addEventListener('pointermove', move); stick.addEventListener('pointerup', () => { stick.releasePointerCapture(e.pointerId); resetStick(team); }, {once:true}); stick.addEventListener('pointercancel', () => resetStick(team), {once:true});
-      move(e);
-    });
-  });
-  document.querySelectorAll('.tp-btn').forEach((btn) => {
-    const team = Number(btn.closest('.tp-side').dataset.team), b = btn.dataset.b;
-    const down = (e) => { if (!touchMode || phase !== 'match') return; e.preventDefault(); btn.classList.add('held'); const key = team + ':' + b; if (touchButtons.has(key)) return; const t0 = performance.now(); touchButtons.set(key, t0); game.press(team, b, true, {}); };
-    const up = (e) => { e.preventDefault(); btn.classList.remove('held'); const key = team + ':' + b, t0 = touchButtons.get(key); if (t0 == null) return; touchButtons.delete(key); const hold = Math.min(1.2, Math.max(0, (performance.now()-t0)/1000)); game.press(team, b, false, { hold }); };
-    btn.addEventListener('pointerdown', down); btn.addEventListener('pointerup', up); btn.addEventListener('pointercancel', up); btn.addEventListener('pointerleave', (e) => { if (touchButtons.has(team+':'+b)) up(e); });
-  });
-  $('touchExit').addEventListener('click', () => { touchMode = false; playing = false; phase = 'menu'; game.start(minutes, [false,false]); $('hud').classList.remove('on'); $('sndHud').classList.remove('on'); screen('menu'); });
-
+  $('lobbyBack').onclick = $('toMenu').onclick = () => { if (window.FafiTouch) window.FafiTouch.hide(); location.reload(); };
+  $('rematch').onclick = () => { if (touchMode) startTouchMatch(); else { screen(null); beginMode(); } };
   const durBox = $('durs');
   CFG.durations.forEach((m) => {
     const b = document.createElement('button'); b.textContent = m + ' dk'; b.className = m === minutes ? 'sel' : '';
