@@ -84,29 +84,23 @@
   #end h2{font-family:var(--display);font-size:clamp(3rem,7vw,6rem);font-weight:700}
   #end .res{font-family:var(--display);font-size:clamp(2rem,4vw,3.4rem);color:var(--muted)}
   #end .row{display:flex;gap:1rem;margin-top:1rem}
-<
-  /* Akıllı tahta: iki oyunculu dokunmatik gamepad */
-  #touchPad{position:fixed;inset:0;z-index:30;display:none;pointer-events:none;touch-action:none;font-family:var(--text)}
-  #touchPad.on{display:block}
-  .tp-side{position:absolute;top:0;bottom:0;width:50%;pointer-events:none;background:linear-gradient(180deg,rgba(8,15,11,.10),rgba(8,15,11,.22));}
-  .tp-side.left{left:0;border-right:1px solid rgba(236,232,220,.12)}
-  .tp-side.right{right:0;border-left:1px solid rgba(236,232,220,.12)}
-  .tp-team{position:absolute;top:calc(env(safe-area-inset-top) + 5.5rem);font-family:var(--display);font-size:clamp(.9rem,1.5vw,1.2rem);letter-spacing:.08em;opacity:.72;pointer-events:none}
-  .tp-side.left .tp-team{left:2rem}.tp-side.right .tp-team{right:2rem;text-align:right}
-  .tp-stick{position:absolute;bottom:6vh;width:clamp(150px,18vw,230px);height:clamp(150px,18vw,230px);border-radius:50%;border:2px solid rgba(236,232,220,.22);background:rgba(10,18,13,.30);pointer-events:auto;touch-action:none}
-  .tp-side.left .tp-stick{left:5vw}.tp-side.right .tp-stick{right:5vw}
-  .tp-knob{position:absolute;left:50%;top:50%;width:36%;height:36%;transform:translate(-50%,-50%);border-radius:50%;background:rgba(236,232,220,.35);border:1px solid rgba(236,232,220,.45);box-shadow:0 4px 18px rgba(0,0,0,.22)}
-  .tp-actions{position:absolute;bottom:5vh;display:grid;grid-template-columns:repeat(3,clamp(62px,8vw,100px));grid-auto-rows:clamp(62px,8vw,100px);gap:clamp(8px,1.1vw,14px);pointer-events:none}
-  .tp-side.left .tp-actions{right:5vw}.tp-side.right .tp-actions{left:5vw}
-  .tp-btn{pointer-events:auto;touch-action:none;border-radius:50%;padding:0;background:rgba(10,18,13,.62);border:2px solid rgba(236,232,220,.28);font-family:var(--display);font-size:clamp(.78rem,1.2vw,1rem);font-weight:700;letter-spacing:.04em;box-shadow:0 6px 20px rgba(0,0,0,.18);}
-  .tp-btn:active,.tp-btn.held{background:rgba(191,165,106,.32);border-color:rgba(191,165,106,.85)}
-  .tp-btn.shoot{grid-column:3;grid-row:1/3;width:clamp(78px,10vw,122px);height:clamp(78px,10vw,122px);align-self:center;justify-self:center;font-size:clamp(.95rem,1.6vw,1.3rem)}
-  .tp-btn.pass{grid-column:2;grid-row:1}.tp-btn.through{grid-column:1;grid-row:1}.tp-btn.switch{grid-column:1;grid-row:2}.tp-btn.sprint{grid-column:2;grid-row:2}.tp-btn.pressure{grid-column:1;grid-row:3}.tp-btn.slide{grid-column:2;grid-row:3}
-  .tp-side.right .tp-actions{direction:rtl}.tp-side.right .tp-actions .tp-btn{direction:ltr}
-  #touchExit{position:absolute;top:calc(env(safe-area-inset-top) + 1rem);left:50%;transform:translateX(-50%);pointer-events:auto;padding:.55rem 1rem;border-radius:999px;background:rgba(10,18,13,.72);border-color:rgba(236,232,220,.22);font-family:var(--display);letter-spacing:.06em}
-  #touchHint{position:absolute;left:50%;bottom:1.2rem;transform:translateX(-50%);color:rgba(236,232,220,.5);font-size:.72rem;pointer-events:none;white-space:nowrap}
-  @media (max-width:900px){.tp-actions{transform:scale(.82);transform-origin:bottom}.tp-side.left .tp-actions{right:1vw}.tp-side.right .tp-actions{left:1vw}.tp-stick{transform:scale(.85);transform-origin:bottom}.tp-side.left .tp-stick{left:1vw}.tp-side.right .tp-stick{right:1vw}}
 
+  #touchPad{position:fixed;inset:0;display:none;pointer-events:none;z-index:40;touch-action:none}
+  #touchPad.on{display:block}
+  .tp-side{position:absolute;top:0;bottom:0;width:50%;pointer-events:none}
+  .tp-side.left{left:0;border-right:1px solid rgba(236,232,220,.10)} .tp-side.right{right:0;border-left:1px solid rgba(236,232,220,.10)}
+  .tp-label{position:absolute;top:7.5vh;left:2vw;font-family:var(--display);font-size:clamp(.8rem,1.4vw,1.15rem);letter-spacing:.08em;color:rgba(236,232,220,.55)}
+  .tp-side.right .tp-label{left:auto;right:2vw;text-align:right}
+  .tp-stick{position:absolute;width:clamp(100px,12vw,150px);height:clamp(100px,12vw,150px);bottom:5vh;border-radius:50%;border:1px solid rgba(236,232,220,.24);background:rgba(12,20,15,.28);pointer-events:auto;touch-action:none}
+  .tp-side.left .tp-stick{left:4vw}.tp-side.right .tp-stick{right:4vw}
+  .tp-knob{position:absolute;width:36%;height:36%;left:32%;top:32%;border-radius:50%;background:rgba(236,232,220,.55);box-shadow:0 4px 18px rgba(0,0,0,.25);pointer-events:none}
+  .tp-actions{position:absolute;bottom:4.5vh;display:grid;grid-template-columns:repeat(3,clamp(52px,5.8vw,76px));grid-auto-rows:clamp(52px,5.8vw,76px);gap:clamp(7px,1vw,13px);pointer-events:auto}
+  .tp-side.left .tp-actions{right:5vw}.tp-side.right .tp-actions{left:5vw}
+  .tp-btn{border:1px solid rgba(236,232,220,.26);border-radius:50%;padding:0;background:rgba(12,20,15,.50);backdrop-filter:blur(5px);font-family:var(--display);font-size:clamp(.68rem,1.05vw,.95rem);font-weight:700;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;color:var(--chalk);pointer-events:auto;touch-action:none}
+  .tp-btn:active,.tp-btn.on{background:rgba(191,165,106,.45);border-color:var(--brass)}
+  .tp-btn.shoot{grid-column:2;grid-row:2;transform:scale(1.16)} .tp-btn.pass{grid-column:1;grid-row:1}.tp-btn.through{grid-column:3;grid-row:1}.tp-btn.switch{grid-column:1;grid-row:2}.tp-btn.sprint{grid-column:3;grid-row:2}.tp-btn.pressure{grid-column:1;grid-row:3}.tp-btn.slide{grid-column:3;grid-row:3}
+  #touchHint{position:absolute;bottom:1.2vh;left:50%;transform:translateX(-50%);font-size:.72rem;color:rgba(236,232,220,.45);white-space:nowrap}
+  @media (max-width:800px){.tp-actions{grid-template-columns:repeat(3,52px);grid-auto-rows:52px}.tp-stick{width:105px;height:105px}.tp-btn{font-size:.62rem}}
 </style>
 </head>
 <body>
@@ -115,10 +109,10 @@
 <div id="menu" class="screen on">
   <div class="menu-box">
     <h1 class="title">FAFİ 27</h1>
-    <p class="tag">Telefonu gamepad yap veya iki oyuncuyu doğrudan akıllı tahta dokunmatiğine bağla.</p>
+    <p class="tag">Yeni saha ve oyuncular. Telefonla gamepad veya doğrudan akıllı tahtada iki oyuncu.</p>
     <div class="menu-actions">
       <button id="playBtn" class="primary play">Telefonla Oyna</button>
-      <button id="touchModeBtn" class="primary play">Akıllı Tahta · 2 Oyuncu</button>
+      <button id="touchModeBtn" class="primary play">Tahtada 2 Oyuncu</button>
       <button id="penModeBtn" class="primary play">Penaltı Atışları</button>
     </div>
     <div class="opts">
@@ -151,43 +145,22 @@
 <button id="sndHud">Ses: Açık</button>
 <div id="banner"></div>
 
+
+<div id="touchPad" aria-hidden="true">
+  <div class="tp-side left" data-team="0"><div class="tp-label">TAKIM 1</div><div class="tp-stick"><div class="tp-knob"></div></div><div class="tp-actions">
+    <button class="tp-btn pass" data-btn="pass">PAS</button><button class="tp-btn through" data-btn="through">ARA</button><button class="tp-btn switch" data-btn="switch">DEĞİŞ</button><button class="tp-btn shoot" data-btn="shoot">ŞUT</button><button class="tp-btn sprint" data-btn="sprint">KOŞ</button><button class="tp-btn pressure" data-btn="pressure">BASKI</button><button class="tp-btn slide" data-btn="slide">KAY</button>
+  </div></div>
+  <div class="tp-side right" data-team="1"><div class="tp-label">TAKIM 2</div><div class="tp-stick"><div class="tp-knob"></div></div><div class="tp-actions">
+    <button class="tp-btn pass" data-btn="pass">PAS</button><button class="tp-btn through" data-btn="through">ARA</button><button class="tp-btn switch" data-btn="switch">DEĞİŞ</button><button class="tp-btn shoot" data-btn="shoot">ŞUT</button><button class="tp-btn sprint" data-btn="sprint">KOŞ</button><button class="tp-btn pressure" data-btn="pressure">BASKI</button><button class="tp-btn slide" data-btn="slide">KAY</button>
+  </div></div><div id="touchHint">İki taraf aynı anda kullanılabilir</div>
+</div>
+
 <div id="end" class="screen">
   <h2 id="endTitle"></h2>
   <div class="res" id="endScore"></div>
   <div class="row"><button id="rematch" class="primary">Tekrar oyna</button><button id="toMenu">Ana menü</button></div>
 </div>
 
-
-<div id="touchPad" aria-label="Akıllı tahta iki oyunculu gamepad">
-  <div class="tp-side left" data-team="0">
-    <div class="tp-team" id="tpTeam0">TAKIM 1</div>
-    <div class="tp-stick" data-team="0"><div class="tp-knob"></div></div>
-    <div class="tp-actions" data-team="0">
-      <button class="tp-btn through" data-b="through">ARA</button>
-      <button class="tp-btn pass" data-b="pass">PAS</button>
-      <button class="tp-btn shoot" data-b="shoot">ŞUT</button>
-      <button class="tp-btn switch" data-b="switch">DEĞİŞ</button>
-      <button class="tp-btn sprint" data-b="sprint">KOŞ</button>
-      <button class="tp-btn pressure" data-b="pressure">BASKI</button>
-      <button class="tp-btn slide" data-b="slide">KAY</button>
-    </div>
-  </div>
-  <div class="tp-side right" data-team="1">
-    <div class="tp-team" id="tpTeam1">TAKIM 2</div>
-    <div class="tp-stick" data-team="1"><div class="tp-knob"></div></div>
-    <div class="tp-actions" data-team="1">
-      <button class="tp-btn through" data-b="through">ARA</button>
-      <button class="tp-btn pass" data-b="pass">PAS</button>
-      <button class="tp-btn shoot" data-b="shoot">ŞUT</button>
-      <button class="tp-btn switch" data-b="switch">DEĞİŞ</button>
-      <button class="tp-btn sprint" data-b="sprint">KOŞ</button>
-      <button class="tp-btn pressure" data-b="pressure">BASKI</button>
-      <button class="tp-btn slide" data-b="slide">KAY</button>
-    </div>
-  </div>
-  <button id="touchExit" type="button">MAÇTAN ÇIK</button>
-  <div id="touchHint">İki taraf aynı anda dokunmatik kullanılabilir</div>
-</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
@@ -195,6 +168,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="config.js"></script>
 <script src="js/game.js?v=3"></script>
-<script src="js/host.js?v=3"></script>
+<script src="js/touch.js?v=1"></script>
+<script src="js/host.js?v=4"></script>
 </body>
 </html>
